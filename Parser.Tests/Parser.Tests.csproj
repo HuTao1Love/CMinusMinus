@@ -28,4 +28,8 @@
       <ProjectReference Include="..\Parser\Parser.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <EmbeddedResource Include="Files\**" />
+    </ItemGroup>
+
 </Project>
