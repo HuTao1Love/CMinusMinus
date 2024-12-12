@@ -23,13 +23,13 @@
     <ItemGroup>
         <Using Include="NUnit.Framework"/>
     </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\Parser\Parser.csproj" />
-    </ItemGroup>
-
+    
     <ItemGroup>
         <EmbeddedResource Include="Files\**" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\Parser\Parser.csproj" />
     </ItemGroup>
 
 </Project>

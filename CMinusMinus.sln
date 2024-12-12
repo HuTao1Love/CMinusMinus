@@ -1,8 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Parser", "Parser\Parser.csproj", "{D64FE1F0-2C84-4513-AF61-8F6E85FDA396}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Parser", "src\Parser\Parser.csproj", "{D64FE1F0-2C84-4513-AF61-8F6E85FDA396}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Parser.Tests", "Parser.Tests\Parser.Tests.csproj", "{E042BB11-A4C8-40E6-89EA-F6FF53F4A9FC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Parser.Tests", "tests\Parser.Tests\Parser.Tests.csproj", "{E042BB11-A4C8-40E6-89EA-F6FF53F4A9FC}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{4C979E3D-4335-44C5-8047-8144B463DF85}"
 EndProject
