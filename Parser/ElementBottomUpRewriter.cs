@@ -1,6 +1,9 @@
 using System.Diagnostics;
 using Antlr4.Runtime.Tree;
+using Parser.Elements;
 using Parser.Grammar;
+using String = Parser.Elements.String;
+using Type = Parser.Elements.Type;
 
 namespace Parser;
 
@@ -13,7 +16,7 @@ public class ElementBottomUpRewriter : CmmBaseVisitor<Element>
 
     public override Element VisitProgram(CmmParser.ProgramContext context)
     {
-        return new Program
+        return new Elements.Program
         {
             Functions = context.function().Select(i => i.Accept(this)).Cast<Function>().ToArray()
         };
@@ -93,6 +96,7 @@ public class ElementBottomUpRewriter : CmmBaseVisitor<Element>
         {
             Type = (Type)context.type().Accept(this),
             Variable = context.ID().GetText(),
+            Value = null,
         };
 
     public override Element VisitReturn(CmmParser.ReturnContext context) => new Statement.ReturnStatement
@@ -105,6 +109,7 @@ public class ElementBottomUpRewriter : CmmBaseVisitor<Element>
         {
             Left = (Expression)context.expression(0).Accept(this),
             Right = (Expression)context.expression(1).Accept(this),
+            Operator = context.@operator.Text
         };
 
     public override Element VisitExpression_calc(CmmParser.Expression_calcContext context)
@@ -112,6 +117,7 @@ public class ElementBottomUpRewriter : CmmBaseVisitor<Element>
         {
             Left = (Expression)context.expression(0).Accept(this),
             Right = (Expression)context.expression(1).Accept(this),
+            Operator = context.@operator.Text
         };
 
     public override Element VisitExpression_function(CmmParser.Expression_functionContext context) =>

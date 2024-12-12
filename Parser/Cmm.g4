@@ -52,16 +52,16 @@ return
     ;
     
 expression
-    : ID                                                                   # expression_variable
-    | function_call                                                        # expression_function
-    | value                                                                # expression_value
-    | '(' expression ')'                                                   # expression_brackets
-    | ('-' | '!') expression                                               # expression_negation
-    | expression '*' expression                                            # expression_calc
-    | expression ('+' | '-') expression                                    # expression_calc
-    | expression ('==' | '!=' | '<' | '>' | '<=' | '>=') expression        # expression_logical
-    | expression '&&' expression                                           # expression_logical
-    | expression '||' expression                                           # expression_logical
+    : ID                                                                            # expression_variable
+    | function_call                                                                 # expression_function
+    | value                                                                         # expression_value
+    | '(' expression ')'                                                            # expression_brackets
+    | operator=('-' | '!') expression                                               # expression_negation
+    | expression operator='*' expression                                            # expression_calc
+    | expression operator=('+' | '-') expression                                    # expression_calc
+    | expression operator=('==' | '!=' | '<' | '>' | '<=' | '>=') expression        # expression_logical
+    | expression operator='&&' expression                                           # expression_logical
+    | expression operator='||' expression                                           # expression_logical
     ;
 
 type

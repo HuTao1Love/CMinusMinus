@@ -8,7 +8,7 @@ number factorial(n) {
     }
     return n * factorial(n - 1)
 }
-
+хуй
 number main() {
     number num = 10
 
