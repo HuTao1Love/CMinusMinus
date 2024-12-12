@@ -1,0 +1,57 @@
+[*]
+charset = utf-8
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.Generated.cs]
+generated_code = true
+
+[*.{cs,csx,cake,vb,vbx}]
+dotnet_style_qualification_for_field = false:warning
+dotnet_style_qualification_for_property = false:warning
+dotnet_style_qualification_for_method = false:warning
+dotnet_style_qualification_for_event = false:warning
+
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+dotnet_naming_style.require_underscore_prefix_and_camel_case.required_prefix = _
+dotnet_naming_style.require_underscore_prefix_and_camel_case.capitalization = camel_case
+dotnet_naming_rule.private_fields_must_begin_with_underscore_and_be_in_camel_case.symbols = private_fields
+dotnet_naming_rule.private_fields_must_begin_with_underscore_and_be_in_camel_case.style = require_underscore_prefix_and_camel_case
+dotnet_naming_rule.private_fields_must_begin_with_underscore_and_be_in_camel_case.severity = warning
+
+csharp_style_expression_bodied_operators = when_on_single_line
+
+dotnet_diagnostic.CA1716.severity = none
+dotnet_diagnostic.CA2201.severity = none
+dotnet_diagnostic.CA1720.severity = none
+dotnet_diagnostic.CA1859.severity = none
+dotnet_diagnostic.CA1848.severity = none
+
+dotnet_diagnostic.CS1591.severity = none
+dotnet_diagnostic.CS1998.severity = none
+
+dotnet_diagnostic.IDE0032.severity = none
+dotnet_diagnostic.IDE0058.severity = none
+
+dotnet_diagnostic.SA1600.severity = none
+dotnet_diagnostic.SA1601.severity = none
+dotnet_diagnostic.SA1602.severity = none
+dotnet_diagnostic.SA1611.severity = none
+dotnet_diagnostic.SA1614.severity = none
+dotnet_diagnostic.SA1615.severity = none
+dotnet_diagnostic.SA1627.severity = none
+dotnet_diagnostic.SA1629.severity = none
+dotnet_diagnostic.SA1309.severity = none
+dotnet_diagnostic.SA1101.severity = none
+dotnet_diagnostic.SA1633.severity = none
+dotnet_diagnostic.SA1402.severity = none
+dotnet_diagnostic.SA1201.severity = none
+dotnet_diagnostic.SA1202.severity = none
+dotnet_diagnostic.SA1203.severity = none
+dotnet_diagnostic.SA1214.severity = none
+dotnet_diagnostic.SA1649.severity = none
+
+dotnet_diagnostic.VSTHRD111.severity = none

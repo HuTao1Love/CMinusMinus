@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using Antlr4.Runtime.Tree;
 using Parser.Elements;
 using Parser.Grammar;
@@ -46,11 +47,11 @@ public class ElementBottomUpRewriter : CmmBaseVisitor<Element>
     };
 
     public override Element VisitBlock(CmmParser.BlockContext context) => new Block
-        { 
+        {
             Statements = context.statement()
                 .Select(i => i.Accept(this))
                 .Cast<Statement>()
-                .ToArray() 
+                .ToArray()
         };
 
     public override Element VisitStatement_block(CmmParser.Statement_blockContext context) => context.block().Accept(this);
@@ -159,7 +160,7 @@ public class ElementBottomUpRewriter : CmmBaseVisitor<Element>
 
     public override Element VisitValue(CmmParser.ValueContext context) => VisitChildren(context);
 
-    public override Element VisitNumber(CmmParser.NumberContext context) => new Number { Value = long.Parse(context.GetText()) };
+    public override Element VisitNumber(CmmParser.NumberContext context) => new Number { Value = long.Parse(context.GetText(), CultureInfo.InvariantCulture) };
 
     public override Element VisitString(CmmParser.StringContext context) => new String { Value = context.GetText() };
 
