@@ -1,8 +1,6 @@
-﻿using System.Collections.ObjectModel;
-using System.CommandLine;
+﻿using System.CommandLine;
 using Interpreter;
 using Interpreter.Optimizer;
-using Timer = System.Timers.Timer;
 
 namespace Program;
 
