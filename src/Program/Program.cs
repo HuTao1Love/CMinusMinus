@@ -108,7 +108,7 @@ public static class Program
         {
             var start = DateTime.Now;
             var vm = new VirtualMachine(optimizers);
-            vm.Run($"{file}.cmmbin");
+            vm.Run(file.EndsWith(".cmmbin", StringComparison.InvariantCultureIgnoreCase) ? file : $"{file}.cmmbin");
             var end = DateTime.Now - start;
             output.WriteLine($"===============\nRun success. Time: {end.TotalMilliseconds}ms");
 
