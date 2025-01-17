@@ -8,17 +8,7 @@
         <PackageVersion Include="Microsoft.CodeAnalysis.Common" Version="4.9.2" />
         <PackageVersion Include="Antlr4.Runtime.Standard" Version="4.13.1" />
         <PackageVersion Include="Antlr4BuildTasks" Version="12.8.0" />
-        <PackageReference Include="Antlr4.Runtime.Standard" Version="4.13.1" />
-        <PackageReference Include="Antlr4BuildTasks" Version="12.8.0" />
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-        <PackageReference Include="coverlet.collector" Version="6.0.0"/>
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0"/>
-        <PackageReference Include="NUnit" Version="3.14.0"/>
-        <PackageReference Include="NUnit.Analyzers" Version="4.4.0">
-            <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-        <PackageReference Include="NUnit3TestAdapter" Version="4.5.0"/>
+        <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
+        <PackageVersion Include="coverlet.collector" Version="6.0.0"/>
     </ItemGroup>
 </Project>
