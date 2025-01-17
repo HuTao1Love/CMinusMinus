@@ -4,7 +4,7 @@ public class Instruction
 {
     public VmInstructionType Type { get; set; }
 
-    public List<string> Arguments { get; set; } = [];
+    public IList<string> Arguments { get; set; } = [];
 
     public static Instruction FromString(string instruction)
     {

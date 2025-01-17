@@ -3,13 +3,9 @@ using Interpreter.Optimizer;
 
 namespace Interpreter;
 
-public class VirtualMachine
+public class VirtualMachine(IEnumerable<IOptimizer> optimizers)
 {
-    private static readonly IOptimizer[] _optimizers =
-    [
-        new ConstFoldingOptimizer(),
-    ];
-
+    private readonly IOptimizer[] _optimizers = optimizers.ToArray();
     private List<Instruction> _instructions = new();
     private Dictionary<string, int> _marks = new();
     private Stack<Frame> _frames = new();
@@ -17,9 +13,9 @@ public class VirtualMachine
 
     #region Run
 
-    public void Run()
+    public void Run(string compiledFilePath)
     {
-        ReadInstructions();
+        ReadInstructions(compiledFilePath);
 
         foreach (var optimizer in _optimizers)
         {
@@ -29,13 +25,13 @@ public class VirtualMachine
         Execute();
     }
 
-    private void ReadInstructions()
+    private void ReadInstructions(string compiledFilePath)
     {
-        var lines = File.ReadAllLines("instructions.txt");
+        var lines = File.ReadAllLines(compiledFilePath);
 
         foreach (var line in lines)
         {
-            if (line.Contains(':'))
+            if (line.Contains(':', StringComparison.InvariantCultureIgnoreCase))
             {
                 var mark = line.TrimEnd(':');
                 _marks[mark] = _instructions.Count;
