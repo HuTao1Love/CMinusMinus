@@ -4,32 +4,20 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <RootNamespace>Compiler</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Antlr4.Runtime.Standard" />
-    </ItemGroup>
-    
-    <ItemGroup>
-      <Antlr4 Include="Grammar\CMinusMinus.g4">
-        <AllowAntlr4cs>false</AllowAntlr4cs>
-        <AntlrToolJarDownloadDir>USERPROFILE/.m2/</AntlrToolJarDownloadDir>
-        <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-        <DOptions>language=CSharp</DOptions>
-        <Encoding>UTF-8</Encoding>
-        <Error>false</Error>
-        <ForceAtn>false</ForceAtn>
-        <GAtn>false</GAtn>
-        <Generator>MSBuild:Compile</Generator>
-        <IntermediateOutputPath>obj\Debug\net8.0\</IntermediateOutputPath>
-        <JavaDownloadDirectory>USERPROFILE/.jre/</JavaDownloadDirectory>
-        <JavaExec>PATH;DOWNLOAD</JavaExec>
-        <Listener>false</Listener>
-        <Log>false</Log>
-        <LongMessages>false</LongMessages>
-        <Package>Compiler.Grammar</Package>
-        <Visitor>true</Visitor>
-      </Antlr4>
+        <PackageReference Include="Antlr4BuildTasks" />
     </ItemGroup>
 
+    <ItemGroup>
+        <Antlr4 Include="CMinusMinus.g4">
+            <Package>$(RootNamespace).Grammar</Package>
+            <Listener>true</Listener>
+            <Visitor>true</Visitor>
+            <JavaExec>DOWNLOAD</JavaExec>
+        </Antlr4>
+    </ItemGroup>
 </Project>
