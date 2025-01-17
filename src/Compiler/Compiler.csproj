@@ -7,7 +7,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Antlr4BuildTasks" PrivateAssets="all" />
         <PackageReference Include="Antlr4.Runtime.Standard" />
     </ItemGroup>
     

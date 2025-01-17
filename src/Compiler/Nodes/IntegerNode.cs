@@ -9,7 +9,7 @@ public class IntegerNode(BigInteger value) : IVmNode
 
     public VmNodeType GetNodeType() => VmNodeType.Integer;
 
-    public string Value() => _value.ToString(CultureInfo.InvariantCulture);
+    public string Value => _value.ToString(CultureInfo.InvariantCulture);
 
     public void Negate() => _value = -_value;
 

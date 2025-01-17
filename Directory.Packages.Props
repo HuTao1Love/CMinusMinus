@@ -1,14 +1,13 @@
 <Project>
-    <PropertyGroup>
-        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-        <EnablePackageVersionOverride>false</EnablePackageVersionOverride>
-    </PropertyGroup>
-    <ItemGroup>
-        <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.9.2" />
-        <PackageVersion Include="Microsoft.CodeAnalysis.Common" Version="4.9.2" />
-        <PackageVersion Include="Antlr4.Runtime.Standard" Version="4.13.1" />
-        <PackageVersion Include="Antlr4BuildTasks" Version="12.8.0" />
-        <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
-        <PackageVersion Include="coverlet.collector" Version="6.0.0"/>
-    </ItemGroup>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <EnablePackageVersionOverride>false</EnablePackageVersionOverride>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.9.2" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.Common" Version="4.9.2" />
+    <PackageVersion Include="Antlr4.Runtime.Standard" Version="4.13.1" />
+    <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageVersion Include="coverlet.collector" Version="6.0.0" />
+  </ItemGroup>
 </Project>

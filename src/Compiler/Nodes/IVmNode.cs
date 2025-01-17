@@ -4,7 +4,7 @@ public interface IVmNode
 {
     VmNodeType GetNodeType();
 
-    string Value();
+    string Value { get; }
 
     void Negate();
 

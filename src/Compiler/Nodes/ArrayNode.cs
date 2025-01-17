@@ -10,7 +10,7 @@ public class ArrayNode(int size) : IVmNode, IList<IVmNode>
 
     public VmNodeType GetNodeType() => VmNodeType.Array;
 
-    public string Value() => $"[ {string.Join(", ", _value.Select(node => node.Value()))} ]";
+    public string Value => $"[ {string.Join(", ", _value.Select(node => node.Value))} ]";
 
     public void Negate() => throw new InvalidOperationException("Cannot perform action on array");
 
