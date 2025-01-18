@@ -26,5 +26,5 @@ public enum VmInstructionType
     Access,
     Length,
     BinAnd,
-    BinOr
+    BinOr,
 }

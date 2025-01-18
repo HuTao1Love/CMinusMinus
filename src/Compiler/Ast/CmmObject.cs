@@ -1,7 +1,6 @@
-﻿using System.Linq.Expressions;
-using System.Numerics;
+﻿using System.Numerics;
 
-namespace Compiler;
+namespace Compiler.Ast;
 
 public record CmmObject;
 
@@ -11,7 +10,7 @@ public sealed record IntValue(BigInteger Value) : Value();
 
 public abstract record Statement : CmmObject;
 
-public record Block(Statement[] Statements) : CmmObject;
+public sealed record Block(Statement[] Statements) : CmmObject;
 
 public sealed record Variable(string Name, Expression[]? ArrayAccess) : CmmObject;
 public sealed record FunctionCall(string Function, Expression[] Args) : CmmObject;

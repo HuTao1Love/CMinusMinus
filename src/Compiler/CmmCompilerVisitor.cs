@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.Numerics;
 using Antlr4.Runtime.Tree;
+using Compiler.Ast;
 using Compiler.Grammar;
 
 namespace Compiler;
