@@ -26,7 +26,7 @@ COMMENT      : '//' ~[\r\n]* -> skip;
 program: function_declaration+ EOF;
 
 function_declaration
-    : 'function' name=ID '(' (args=ID (',' args=ID)*)? ')' block
+    : 'function' ID '(' (ID (',' ID)*)? ')' block
     ;
 
 statement
@@ -35,6 +35,7 @@ statement
     | for                                      # statement_for
     | while                                    # statement_while
     | function                                 # statement_function
+    | array_init ';'                           # statement_array_init
     | assignment ';'                           # statement_assignment
     | return                                   # statement_return
     | print                                    # statement_print
@@ -45,7 +46,7 @@ if
     ;
 
 for
-    : 'for' '(' assignment ';' expression ';' assignment ')' block
+    : 'for' '(' start=assignment ';' cond=expression ';' step=assignment ')' block
     ;
 
 while
@@ -57,13 +58,15 @@ function
     ;
 
 assignment
-    : var '=' expression                   # assignment_value
-    | 'array' ID '[' expression ']'        # assignment_array
+    : var '=' expression
+    ;
+
+array_init
+    : 'array' ID '[' expression ']'
     ;
 
 var
-    : ID                           # variable
-    | ID ('[' expression ']')+     # array
+    : ID ('[' expression ']')*
     ;
 
 return
@@ -75,16 +78,16 @@ print
     ;
 
 expression
-    : var                                                                           # expression_variable
-    | function                                                                      # expression_function
-    | value                                                                         # expression_value
-    | '(' expression ')'                                                            # expression_brackets
-    | operator=('-' | '!') expression                                               # expression_negation
-    | expression operator=('/' | '*') expression                                    # expression_calc
-    | expression operator=('+' | '-') expression                                    # expression_calc
-    | expression operator=('==' | '!=' | '<' | '>' | '<=' | '>=') expression        # expression_logical
-    | expression operator='&&' expression                                           # expression_logical
-    | expression operator='||' expression                                           # expression_logical
+    : var                                                                                   # expression_variable
+    | function                                                                              # expression_function
+    | value                                                                                 # expression_value
+    | '(' expression ')'                                                                    # expression_brackets
+    | operator=('-' | '!') expression                                                       # expression_negation
+    | lhs=expression operator=('/' | '*') rhs=expression                                    # expression_calc
+    | lhs=expression operator=('+' | '-') rhs=expression                                    # expression_calc
+    | lhs=expression operator=('==' | '!=' | '<' | '>' | '<=' | '>=') rhs=expression        # expression_logical
+    | lhs=expression operator='&&' rhs=expression                                           # expression_logical
+    | lhs=expression operator='||' rhs=expression                                           # expression_logical
     ;
 
 block
