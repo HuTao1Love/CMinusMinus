@@ -1,5 +1,8 @@
-﻿namespace Compiler;
+﻿using Antlr4.Runtime.Tree;
+using Compiler.Grammar;
 
-public class CmmCompilerVisitor
+namespace Compiler;
+
+public class CmmCompilerVisitor : CMinusMinusBaseVisitor<bool>
 {
 }

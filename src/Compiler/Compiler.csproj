@@ -17,7 +17,6 @@
             <Package>$(RootNamespace).Grammar</Package>
             <Listener>true</Listener>
             <Visitor>true</Visitor>
-            <JavaExec>DOWNLOAD</JavaExec>
         </Antlr4>
     </ItemGroup>
 </Project>

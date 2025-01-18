@@ -1,77 +1,96 @@
 grammar CMinusMinus;
 
-// Лексер
-WS      : [ \t\r\n]+ -> skip ;
-INT     : [0-9]+ ;
-ID      : [a-zA-Z_][a-zA-Z_0-9]* ;
+// lexer
+ASSIGN       : '=';
+EQUAL        : '==';
+PLUS         : '+';
+MINUS        : '-';
+MULT         : '*';
+DIVIDE       : '/';
+LT           : '<';
+GT           : '>';
+POPEN        : '(';
+PCLOSE       : ')';
+BROPEN       : '{';
+BRCLOSE      : '}';
+BOPEN        : '[';
+BCLOSE       : ']';
+COMMA        : ',';
+SEMICOLON    : ';';
+ID           : [a-zA-Z_][a-zA-Z0-9_]*;
+INT          : [0-9]+;
+WHITESPACE   : [ \t\r\n]+ -> skip;
+COMMENT      : '//' ~[\r\n]* -> skip;
 
-// Ключевые слова
-WHILE   : 'while';
-IF      : 'if';
-ELSE    : 'else';
-PRINT   : 'print';
-RETURN  : 'return';
+// parser
+program: function_declaration+ EOF;
 
-// Операторы
-EQ      : '==';
-GE      : '>=';
-LE      : '<=';
-ASSIGN  : '=';
-PLUS    : '+';
-MINUS   : '-';
-MUL     : '*';
-DIV     : '/';
-LT      : '<';
-GT      : '>';
-
-// Символы
-LPAREN  : '(';
-RPAREN  : ')';
-LBRACE  : '{';
-RBRACE  : '}';
-COMMA   : ',';
-SEMICOLON : ';';
-
-// Парсер
-program
-    : stmt* EOF
+function_declaration
+    : 'function' name=ID '(' (args=ID (',' args=ID)*)? ')' block
     ;
 
-stmt
-    : expr SEMICOLON
-    | block
-    | ifStmt
-    | whileStmt
-    | printStmt
-    | returnStmt
+statement
+    : block                                    # statement_block
+    | if                                       # statement_if
+    | for                                      # statement_for
+    | while                                    # statement_while
+    | function                                 # statement_function
+    | assignment ';'                           # statement_assignment
+    | return                                   # statement_return
+    | print                                    # statement_print
+    ;
+
+if
+    : 'if' '(' expression ')' ifblock=block ('else' elseblock=block)?
+    ;
+
+for
+    : 'for' '(' assignment ';' expression ';' assignment ')' block
+    ;
+
+while
+    : 'while' '(' expression ')' block
+    ;
+
+function
+    : ID '(' expression? (',' expression)* ')'
+    ;
+
+assignment
+    : var '=' expression                   # assignment_value
+    | 'array' ID '[' expression ']'        # assignment_array
+    ;
+
+var
+    : ID                           # variable
+    | ID ('[' expression ']')+     # array
+    ;
+
+return
+    : 'return' expression? ';'
+    ;
+
+print
+    : 'print' expression? ';'
+    ;
+
+expression
+    : var                                                                           # expression_variable
+    | function                                                                      # expression_function
+    | value                                                                         # expression_value
+    | '(' expression ')'                                                            # expression_brackets
+    | operator=('-' | '!') expression                                               # expression_negation
+    | expression operator=('/' | '*') expression                                    # expression_calc
+    | expression operator=('+' | '-') expression                                    # expression_calc
+    | expression operator=('==' | '!=' | '<' | '>' | '<=' | '>=') expression        # expression_logical
+    | expression operator='&&' expression                                           # expression_logical
+    | expression operator='||' expression                                           # expression_logical
     ;
 
 block
-    : LBRACE stmt* RBRACE
+    : BROPEN statement* BRCLOSE
     ;
 
-ifStmt
-    : IF LPAREN expr RPAREN stmt (ELSE stmt)?
-    ;
-
-whileStmt
-    : WHILE LPAREN expr RPAREN stmt
-    ;
-
-printStmt
-    : PRINT LPAREN expr RPAREN SEMICOLON
-    ;
-
-returnStmt
-    : RETURN expr SEMICOLON
-    ;
-
-expr
-    : expr (PLUS | MINUS) expr
-    | expr (MUL | DIV) expr
-    | expr (EQ | GE | LE | LT | GT) expr
-    | ID ASSIGN expr
-    | INT
-    | ID
-    | LPAREN expr RPAREN
+value
+    : INT
     ;
