@@ -5,11 +5,13 @@ namespace Interpreter;
 
 public class VirtualMachine(IEnumerable<IOptimizer> optimizers)
 {
-    private readonly IOptimizer[] _optimizers = optimizers.ToArray();
-    private List<Instruction> _instructions = new();
-    private Dictionary<string, int> _marks = new();
+
+    private readonly IEnumerable<IOptimizer> _optimizers = optimizers;
+    private List<Instruction> _instructions = [];
+    private Dictionary<string, int> _marks = [];
     private Stack<Frame> _frames = new();
     private Stack<IVmNode> _valueStack = new();
+    private int _instractionPointer = 0;
 
     #region Run
 
@@ -17,9 +19,16 @@ public class VirtualMachine(IEnumerable<IOptimizer> optimizers)
     {
         ReadInstructions(compiledFilePath);
 
+        Console.WriteLine("Read instructions");
+
         foreach (var optimizer in _optimizers)
         {
             optimizer.Optimize(_instructions, _marks);
+        }
+
+        foreach (var instruction in _instructions)
+        {
+            Console.WriteLine(instruction.Type);
         }
 
         Execute();
@@ -34,6 +43,7 @@ public class VirtualMachine(IEnumerable<IOptimizer> optimizers)
             if (line.Contains(':', StringComparison.InvariantCultureIgnoreCase))
             {
                 var mark = line.TrimEnd(':');
+                Console.WriteLine(mark);
                 _marks[mark] = _instructions.Count;
             }
             else
@@ -45,12 +55,30 @@ public class VirtualMachine(IEnumerable<IOptimizer> optimizers)
 
     private void Execute()
     {
-        int currentInstructionIndex = _marks["entrypoint"];
+        _instractionPointer = _marks["entrypoint"];
         _frames.Push(new Frame());
 
-        while (currentInstructionIndex < _instructions.Count)
+        Console.WriteLine();
+        Console.WriteLine("VM Execution");
+        while (_instractionPointer < _instructions.Count)
         {
-            var instruction = _instructions[currentInstructionIndex];
+            var instruction = _instructions[_instractionPointer];
+            Console.WriteLine("Current instruction: " + instruction.Type + " IP: " + _instractionPointer);
+            Console.WriteLine("Stack:");
+            foreach (var value in _valueStack)
+            {
+                Console.WriteLine("Type: " + value.GetNodeType() + " value: " + value.Value);
+            }
+            Console.WriteLine("Values:");
+            foreach (var frame in _frames)
+            {
+                foreach (var kvp in frame.Variables)
+                {
+                    Console.WriteLine($"Key: {kvp.Key}, Type: {kvp.Value.GetNodeType()}, Value: {kvp.Value.Value}");
+                }
+            }
+            Console.WriteLine();
+
             switch (instruction.Type)
             {
                 case VmInstructionType.Push:
@@ -129,7 +157,7 @@ public class VirtualMachine(IEnumerable<IOptimizer> optimizers)
                     throw new InvalidOperationException($"Unknown instruction type: {instruction.Type}");
             }
 
-            currentInstructionIndex++;
+            _instractionPointer++;
         }
     }
 
@@ -145,11 +173,17 @@ public class VirtualMachine(IEnumerable<IOptimizer> optimizers)
         var value = instruction.Arguments[0];
         if (int.TryParse(value, out int intValue))
         {
-            _valueStack.Push(new IntegerNode(intValue));
+            _frames.Peek().Objects.Add(new IntegerNode(intValue));
+            _valueStack.Push(_frames.Peek().Objects.Last());
         }
         else
         {
-            throw new InvalidOperationException("Invalid push argument: not an integer.");
+            if (!_frames.Peek().Variables.TryGetValue(value, out var result))
+            {
+                throw new InvalidOperationException("Invalid push argument: not an integer.");
+            }
+
+            _valueStack.Push(result);
         }
     }
 
@@ -158,7 +192,20 @@ public class VirtualMachine(IEnumerable<IOptimizer> optimizers)
         if (_valueStack.Count == 0)
             throw new InvalidOperationException("Value stack is empty.");
 
-        _valueStack.Pop();
+        if (instruction.Arguments.Count == 1)
+        {
+            var arg = instruction.Arguments[0];
+            _frames.Peek().Variables[arg] = _valueStack.Pop();
+        }
+        else
+        {
+            var arg = instruction.Arguments[1];
+            var index = _valueStack.Pop() as IntegerNode;
+            var value = _valueStack.Pop() as IntegerNode;
+            var array = _frames.Peek().Variables[arg] as ArrayNode;
+            Console.WriteLine($"{int.Parse(index.Value)} and {int.Parse(value.Value)}");
+            array[int.Parse(index.Value)] = value;
+        }
     }
 
     private void HandlePrint()
@@ -209,7 +256,8 @@ public class VirtualMachine(IEnumerable<IOptimizer> optimizers)
         if (!_marks.TryGetValue(instruction.Arguments[0], out var target))
             throw new InvalidOperationException("Invalid jump target.");
 
-        _frames.Peek().ReturnAddress = target - 1;
+        // _frames.Peek().ReturnAddress = target - 1;
+        _instractionPointer = target - 1;
     }
 
     private void HandleNegate()
@@ -230,18 +278,29 @@ public class VirtualMachine(IEnumerable<IOptimizer> optimizers)
         if (!_marks.TryGetValue(instruction.Arguments[0], out var target))
             throw new InvalidOperationException("Invalid function target.");
 
-        var frame = new Frame { ReturnAddress = _frames.Peek().ReturnAddress };
-        _frames.Push(frame);
-        _frames.Peek().ReturnAddress = target;
+        _frames.Push(new Frame { ReturnAddress = _instractionPointer + 1 });
+        _instractionPointer = _marks[instruction.Arguments[0]] - 1;
     }
 
     private void HandleReturn(Instruction instruction)
     {
         if (_frames.Count <= 1)
-            throw new InvalidOperationException("No frame to return to.");
+        {
+            // throw new InvalidOperationException("No frame to return to.");
+            Console.WriteLine("Execution done");
+            return;
+        }
 
-        var frame = _frames.Pop();
-        _frames.Peek().ReturnAddress = frame.ReturnAddress;
+        int returnValue = int.Parse(instruction.Arguments[0]);
+        var prevFrame = _frames.ToArray()[_frames.Count - 2];
+        var frame = _frames.Peek();
+
+        for (int i = 0; i < returnValue; ++i)
+        {
+            prevFrame.Objects.Add(_valueStack.ToArray()[_valueStack.Count - 1 - i]);
+        }
+
+        _instractionPointer = _frames.Pop().ReturnAddress - 1;
     }
 
     private void HandleArrayCreation(Instruction instruction)
@@ -252,34 +311,28 @@ public class VirtualMachine(IEnumerable<IOptimizer> optimizers)
         if (!int.TryParse(_valueStack.Pop().Value, out var size) || size < 0)
             throw new InvalidOperationException("Invalid array size.");
 
-        _valueStack.Push(new ArrayNode(size));
+        var arrName = instruction.Arguments[0];
+        _frames.Peek().Objects.Add(new ArrayNode(size));
+        _frames.Peek().Variables[arrName] = _frames.Peek().Objects.Last();
     }
 
     private void HandleArrayAccess(Instruction instruction)
     {
-        if (_valueStack.Count < 2)
+        if (_valueStack.Count < 1)
             throw new InvalidOperationException("Not enough values on the stack for array access.");
 
         var indexNode = _valueStack.Pop();
         if (!int.TryParse(indexNode.Value, out var index))
             throw new InvalidOperationException("Invalid array index.");
 
-        var arrayNode = _valueStack.Pop() as ArrayNode;
-        if (arrayNode == null)
-            throw new InvalidOperationException("Top of stack is not an array.");
+        var arrayNode = _frames.Peek().Variables[instruction.Arguments[0]] as ArrayNode;
 
         _valueStack.Push(arrayNode[index]);
     }
 
     private void HandleArrayLength(Instruction instruction)
     {
-        if (_valueStack.Count == 0)
-            throw new InvalidOperationException("Value stack is empty, no array for getting length.");
-
-        var arrayNode = _valueStack.Pop() as ArrayNode;
-        if (arrayNode == null)
-            throw new InvalidOperationException("Top of stack is not an array.");
-
+        var arrayNode = _frames.Peek().Variables[instruction.Arguments[0]] as ArrayNode;
         _valueStack.Push(new IntegerNode(arrayNode.Count));
     }
 

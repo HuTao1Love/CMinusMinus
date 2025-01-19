@@ -1,0 +1,89 @@
+bubbleSort:
+	pop	arr
+	length	arr
+	pop	n
+	push	0
+	pop	i
+L0:
+	push	i
+	push	n
+	push	1
+	sub
+	compLT
+	jz	L1
+	push	0
+	pop	j
+L2:
+	push	j
+	push	n
+	push	i
+	sub
+	push	1
+	sub
+	compLT
+	jz	L3
+	push	j
+	access	arr
+	push	j
+	push	1
+	add
+	access	arr
+	compGT
+	jz	L4
+	push	j
+	access	arr
+	pop	temp
+	push	j
+	push	1
+	add
+	access	arr
+	push	j
+	pop	arr	arr
+	push	temp
+	push	j
+	push	1
+	add
+	pop	arr	arr
+L4:
+	push	j
+	push	1
+	add
+	pop	j
+	jmp	L2
+L3:
+	push	i
+	push	1
+	add
+	pop	i
+	jmp	L0
+L1:
+	push	arr
+	return	1
+	return	0
+entrypoint:
+	push	100
+	array	a
+	length	a
+	pop	i
+L5:
+	push	i
+	push	0
+	compGT
+	jz	L6
+	push	i
+	length	a
+	push	i
+	sub
+	pop	arr	a
+	push	i
+	push	1
+	sub
+	pop	i
+	jmp	L5
+L6:
+	push	a
+	print
+	push	a
+	call	bubbleSort
+	print
+	return	0

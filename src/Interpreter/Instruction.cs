@@ -8,7 +8,8 @@ public class Instruction
 
     public static Instruction FromString(string instruction)
     {
-        var parts = instruction.Split('\t');
+        var parts = instruction.Split([' ', '\t'], StringSplitOptions.RemoveEmptyEntries);
+
         return new Instruction
         {
             Type = Enum.Parse<VmInstructionType>(parts[0], true),

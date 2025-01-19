@@ -64,6 +64,11 @@ public class ArrayNode(int size) : IVmNode, IList<IVmNode>
 
     public void RemoveAt(int index) => _value.RemoveAt(index);
 
+    public void Addition(int index, int value)
+    {
+        _value[index].Add(new IntegerNode(value));
+    }
+
     public IVmNode this[int index]
     {
         get => _value[index];

@@ -90,25 +90,30 @@ public static class Program
         }
     }
 
-    private static bool Run(string file, string optimizations, bool writeInfo)
+    private static bool Run(string file, string optimizations, bool writeInfo = true)
     {
-        var output = writeInfo ? Console.Out : TextWriter.Null;
+        // var output = writeInfo ? Console.Out : TextWriter.Null;
+        var output = writeInfo ? Console.Out : Console.Out;
+        file = "../../../" + file;
+        Console.WriteLine("Execute run, file: " + file + " opt: " + optimizations + " wrtieInfo: " + writeInfo);
 
-        var invalidOptimizations = optimizations.Where(o => !_optimizers.ContainsKey(o)).Aggregate(string.Empty, (s, c) => s + c);
-        if (invalidOptimizations.Length != 0)
-        {
-            Console.WriteLine($"Invalid optimizations: {invalidOptimizations}. They were ignored.");
-        }
+        // var invalidOptimizations = optimizations.Where(o => !_optimizers.ContainsKey(o)).Aggregate(string.Empty, (s, c) => s + c);
+        // if (invalidOptimizations.Length != 0)
+        // {
+        //     Console.WriteLine($"Invalid optimizations: {invalidOptimizations}. They were ignored.");
+        // }
 
-        var optimizers = optimizations.Where(o => _optimizers.ContainsKey(o)).Select(o => _optimizers[o]);
+        // var optimizers = optimizations.Where(o => _optimizers.ContainsKey(o)).Select(o => _optimizers[o]);
+        var optimizers = new List<IOptimizer>();
 
-        output.WriteLine("Running...\n===============");
+                         output.WriteLine("Running...\n===============");
 
         try
         {
             var start = DateTime.Now;
             var vm = new VirtualMachine(optimizers);
-            vm.Run(file.EndsWith(".cmmbin", StringComparison.InvariantCultureIgnoreCase) ? file : $"{file}.cmmbin");
+            // var vm = new VirtualMachine(null);
+            vm.Run(file);
             var end = DateTime.Now - start;
             output.WriteLine($"===============\nRun success. Time: {end.TotalMilliseconds}ms");
 
