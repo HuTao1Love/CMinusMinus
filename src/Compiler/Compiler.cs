@@ -11,7 +11,6 @@ public static class Compiler
 
     public static void Compile(string file)
     {
-        Console.WriteLine("HEllo");
         var compiled = $"{file}.cmmbin";
         var text = File.ReadAllText(file);
         var tokens = new AntlrInputStream(text);
