@@ -3,15 +3,13 @@ using Interpreter.Optimizer;
 
 namespace Interpreter;
 
-public class VirtualMachine(IEnumerable<IOptimizer> optimizers)
+public class VirtualMachine(TextWriter output, IEnumerable<IOptimizer> optimizers)
 {
-
-    private readonly IEnumerable<IOptimizer> _optimizers = optimizers;
     private List<Instruction> _instructions = [];
     private Dictionary<string, int> _marks = [];
     private Stack<Frame> _frames = new();
     private Stack<IVmNode> _valueStack = new();
-    private int _instractionPointer = 0;
+    private int _instructionPointer;
 
     #region Run
 
@@ -19,16 +17,16 @@ public class VirtualMachine(IEnumerable<IOptimizer> optimizers)
     {
         ReadInstructions(compiledFilePath);
 
-        Console.WriteLine("Read instructions");
+        output.WriteLine("Read instructions");
 
-        foreach (var optimizer in _optimizers)
+        foreach (var optimizer in optimizers)
         {
             optimizer.Optimize(_instructions, _marks);
         }
 
         foreach (var instruction in _instructions)
         {
-            Console.WriteLine(instruction.Type);
+            output.WriteLine(instruction.Type);
         }
 
         Execute();
@@ -43,7 +41,7 @@ public class VirtualMachine(IEnumerable<IOptimizer> optimizers)
             if (line.Contains(':', StringComparison.InvariantCultureIgnoreCase))
             {
                 var mark = line.TrimEnd(':');
-                Console.WriteLine(mark);
+                output.WriteLine(mark);
                 _marks[mark] = _instructions.Count;
             }
             else
@@ -55,29 +53,33 @@ public class VirtualMachine(IEnumerable<IOptimizer> optimizers)
 
     private void Execute()
     {
-        _instractionPointer = _marks["entrypoint"];
+        if (!_marks.TryGetValue("main", out _instructionPointer))
+        {
+            throw new InvalidOperationException("main function not found");
+        }
+
         _frames.Push(new Frame());
 
-        Console.WriteLine();
-        Console.WriteLine("VM Execution");
-        while (_instractionPointer < _instructions.Count)
+        output.WriteLine();
+        output.WriteLine("VM Execution");
+        while (_instructionPointer < _instructions.Count)
         {
-            var instruction = _instructions[_instractionPointer];
-            Console.WriteLine("Current instruction: " + instruction.Type + " IP: " + _instractionPointer);
-            Console.WriteLine("Stack:");
+            var instruction = _instructions[_instructionPointer];
+            output.WriteLine("Current instruction: " + instruction.Type + " IP: " + _instructionPointer);
+            output.WriteLine("Stack:");
             foreach (var value in _valueStack)
             {
-                Console.WriteLine("Type: " + value.GetNodeType() + " value: " + value.Value);
+                output.WriteLine("Type: " + value.GetNodeType() + " value: " + value.Value);
             }
-            Console.WriteLine("Values:");
+            output.WriteLine("Values:");
             foreach (var frame in _frames)
             {
                 foreach (var kvp in frame.Variables)
                 {
-                    Console.WriteLine($"Key: {kvp.Key}, Type: {kvp.Value.GetNodeType()}, Value: {kvp.Value.Value}");
+                    output.WriteLine($"Key: {kvp.Key}, Type: {kvp.Value.GetNodeType()}, Value: {kvp.Value.Value}");
                 }
             }
-            Console.WriteLine();
+            output.WriteLine();
 
             switch (instruction.Type)
             {
@@ -157,7 +159,7 @@ public class VirtualMachine(IEnumerable<IOptimizer> optimizers)
                     throw new InvalidOperationException($"Unknown instruction type: {instruction.Type}");
             }
 
-            _instractionPointer++;
+            _instructionPointer++;
         }
     }
 
@@ -203,7 +205,7 @@ public class VirtualMachine(IEnumerable<IOptimizer> optimizers)
             var index = _valueStack.Pop() as IntegerNode;
             var value = _valueStack.Pop() as IntegerNode;
             var array = _frames.Peek().Variables[arg] as ArrayNode;
-            Console.WriteLine($"{int.Parse(index.Value)} and {int.Parse(value.Value)}");
+            output.WriteLine($"{int.Parse(index.Value)} and {int.Parse(value.Value)}");
             array[int.Parse(index.Value)] = value;
         }
     }
@@ -257,7 +259,7 @@ public class VirtualMachine(IEnumerable<IOptimizer> optimizers)
             throw new InvalidOperationException("Invalid jump target.");
 
         // _frames.Peek().ReturnAddress = target - 1;
-        _instractionPointer = target - 1;
+        _instructionPointer = target - 1;
     }
 
     private void HandleNegate()
@@ -278,8 +280,8 @@ public class VirtualMachine(IEnumerable<IOptimizer> optimizers)
         if (!_marks.TryGetValue(instruction.Arguments[0], out var target))
             throw new InvalidOperationException("Invalid function target.");
 
-        _frames.Push(new Frame { ReturnAddress = _instractionPointer + 1 });
-        _instractionPointer = _marks[instruction.Arguments[0]] - 1;
+        _frames.Push(new Frame { ReturnAddress = _instructionPointer + 1 });
+        _instructionPointer = _marks[instruction.Arguments[0]] - 1;
     }
 
     private void HandleReturn(Instruction instruction)
@@ -287,7 +289,7 @@ public class VirtualMachine(IEnumerable<IOptimizer> optimizers)
         if (_frames.Count <= 1)
         {
             // throw new InvalidOperationException("No frame to return to.");
-            Console.WriteLine("Execution done");
+            output.WriteLine("Execution done");
             return;
         }
 
@@ -300,7 +302,7 @@ public class VirtualMachine(IEnumerable<IOptimizer> optimizers)
             prevFrame.Objects.Add(_valueStack.ToArray()[_valueStack.Count - 1 - i]);
         }
 
-        _instractionPointer = _frames.Pop().ReturnAddress - 1;
+        _instructionPointer = _frames.Pop().ReturnAddress - 1;
     }
 
     private void HandleArrayCreation(Instruction instruction)

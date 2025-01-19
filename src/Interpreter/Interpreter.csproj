@@ -10,4 +10,8 @@
       <ProjectReference Include="..\Compiler\Compiler.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Serilog" />
+    </ItemGroup>
+
 </Project>
