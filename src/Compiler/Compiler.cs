@@ -1,4 +1,5 @@
 ﻿using Antlr4.Runtime;
+using Compiler.Ast;
 using Compiler.Grammar;
 using Newtonsoft.Json;
 
@@ -17,8 +18,11 @@ public static class Compiler
         CommonTokenStream stream = new(lexer);
         CMinusMinusParser parser = new(stream);
 
-        // TODO interpret as bytecode & write to file in "compiled" variable
         var program = _compilerVisitor.Compile(parser.program());
-        File.WriteAllText(compiled, JsonConvert.SerializeObject(program, Formatting.Indented));
+
+        using StreamWriter sw = new(compiled);
+
+        CmmObjectVisitor objectVisitor = new(sw);
+        objectVisitor.VisitProgram(program);
     }
 }
