@@ -29,10 +29,10 @@ internal class CmmCompilerStatementVisitor(CmmCompilerExpressionVisitor expressi
     protected override Statement DefaultResult => throw new InvalidOperationException();
 
     public override Statement VisitStatement_print(CMinusMinusParser.Statement_printContext context)
-        => new PrintStatement(context.print().Accept(expressionVisitor));
+        => new PrintStatement(context.print().expression().Accept(expressionVisitor));
 
     public override Statement VisitStatement_return(CMinusMinusParser.Statement_returnContext context)
-        => new ReturnStatement(context.@return().Accept(expressionVisitor));
+        => new ReturnStatement(context.@return().expression().Accept(expressionVisitor));
 
     public override Statement VisitStatement_assignment(CMinusMinusParser.Statement_assignmentContext context)
         => new AssignmentStatement(
