@@ -1,14 +1,15 @@
-﻿using Compiler.Nodes;
+﻿using System.Globalization;
+using Compiler.Nodes;
 using Interpreter.Optimizer;
 
 namespace Interpreter;
 
 public class VirtualMachine(TextWriter output, IEnumerable<IOptimizer> optimizers)
 {
-    private List<Instruction> _instructions = [];
-    private Dictionary<string, int> _marks = [];
-    private Stack<Frame> _frames = new();
-    private Stack<IVmNode> _valueStack = new();
+    private readonly List<Instruction> _instructions = [];
+    private readonly Dictionary<string, int> _marks = [];
+    private readonly Stack<Frame> _frames = new();
+    private readonly Stack<IVmNode> _valueStack = new();
     private int _instructionPointer;
 
     #region Run
@@ -67,10 +68,12 @@ public class VirtualMachine(TextWriter output, IEnumerable<IOptimizer> optimizer
             var instruction = _instructions[_instructionPointer];
             output.WriteLine("Current instruction: " + instruction.Type + " IP: " + _instructionPointer);
             output.WriteLine("Stack:");
+
             foreach (var value in _valueStack)
             {
                 output.WriteLine("Type: " + value.GetNodeType() + " value: " + value.Value);
             }
+
             output.WriteLine("Values:");
             foreach (var frame in _frames)
             {
@@ -79,6 +82,7 @@ public class VirtualMachine(TextWriter output, IEnumerable<IOptimizer> optimizer
                     output.WriteLine($"Key: {kvp.Key}, Type: {kvp.Value.GetNodeType()}, Value: {kvp.Value.Value}");
                 }
             }
+
             output.WriteLine();
 
             switch (instruction.Type)
@@ -205,8 +209,8 @@ public class VirtualMachine(TextWriter output, IEnumerable<IOptimizer> optimizer
             var index = _valueStack.Pop() as IntegerNode;
             var value = _valueStack.Pop() as IntegerNode;
             var array = _frames.Peek().Variables[arg] as ArrayNode;
-            output.WriteLine($"{int.Parse(index.Value)} and {int.Parse(value.Value)}");
-            array[int.Parse(index.Value)] = value;
+            output.WriteLine($"{index?.Value} and {value?.Value}");
+            array[int.Parse(index.Value, CultureInfo.InvariantCulture)] = value;
         }
     }
 
@@ -293,7 +297,7 @@ public class VirtualMachine(TextWriter output, IEnumerable<IOptimizer> optimizer
             return;
         }
 
-        int returnValue = int.Parse(instruction.Arguments[0]);
+        int returnValue = int.Parse(instruction.Arguments[0], CultureInfo.InvariantCulture);
         var prevFrame = _frames.ToArray()[_frames.Count - 2];
         var frame = _frames.Peek();
 
@@ -327,14 +331,13 @@ public class VirtualMachine(TextWriter output, IEnumerable<IOptimizer> optimizer
         if (!int.TryParse(indexNode.Value, out var index))
             throw new InvalidOperationException("Invalid array index.");
 
-        var arrayNode = _frames.Peek().Variables[instruction.Arguments[0]] as ArrayNode;
-
+        if (_frames.Peek().Variables[instruction.Arguments[0]] is not ArrayNode arrayNode) throw new InvalidOperationException();
         _valueStack.Push(arrayNode[index]);
     }
 
     private void HandleArrayLength(Instruction instruction)
     {
-        var arrayNode = _frames.Peek().Variables[instruction.Arguments[0]] as ArrayNode;
+        if (_frames.Peek().Variables[instruction.Arguments[0]] is not ArrayNode arrayNode) throw new InvalidOperationException();
         _valueStack.Push(new IntegerNode(arrayNode.Count));
     }
 

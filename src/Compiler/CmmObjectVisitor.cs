@@ -211,7 +211,6 @@ public class CmmObjectVisitor : ICmmObjectVisitor<bool>
     {
         VisitExpression(context.Condition);
 
-
         if (context.ElseBody != null)
         {
             var label1 = NextLabel();

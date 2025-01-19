@@ -26,7 +26,7 @@ COMMENT      : '//' ~[\r\n]* -> skip;
 program: function_declaration+ EOF;
 
 function_declaration
-    : 'function' ID '(' (ID (',' ID)*)? ')' block
+    : 'func' ID '(' (ID (',' ID)*)? ')' block
     ;
 
 statement
@@ -62,7 +62,7 @@ assignment
     ;
 
 array_init
-    : 'array' ID '[' expression ']'
+    : 'new' ID '[' expression ']'
     ;
 
 var

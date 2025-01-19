@@ -79,7 +79,7 @@ public static class Program
             var start = DateTime.Now;
             Compiler.Compiler.Compile(file);
             var end = DateTime.Now - start;
-            output.WriteLine($"Compilation success. Time: {end.TotalMilliseconds}ms");
+            Console.WriteLine($"Compilation success. Time: {end.TotalMilliseconds}ms");
 
             return true;
         }
@@ -111,7 +111,8 @@ public static class Program
             var vm = new VirtualMachine(output, optimizers);
             vm.Run(compiled);
             var end = DateTime.Now - start;
-            output.WriteLine($"===============\nRun success. Time: {end.TotalMilliseconds}ms");
+            output.WriteLine("===============\n");
+            Console.WriteLine($"Run success. Time: {end.TotalMilliseconds}ms");
 
             return true;
         }
