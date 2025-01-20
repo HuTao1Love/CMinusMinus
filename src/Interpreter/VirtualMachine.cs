@@ -20,6 +20,7 @@ public class VirtualMachine(TextWriter output, IEnumerable<IOptimizer> optimizer
 
         output.WriteLine("Read instructions");
 
+        // todo optimize in runtime
         foreach (var optimizer in optimizers)
         {
             optimizer.Optimize(_instructions, _marks);
@@ -39,16 +40,15 @@ public class VirtualMachine(TextWriter output, IEnumerable<IOptimizer> optimizer
 
         foreach (var line in lines)
         {
-            if (line.Contains(':', StringComparison.InvariantCultureIgnoreCase))
-            {
-                var mark = line.TrimEnd(':');
-                output.WriteLine(mark);
-                _marks[mark] = _instructions.Count;
-            }
-            else
+            if (!line.Contains(':', StringComparison.InvariantCultureIgnoreCase))
             {
                 _instructions.Add(Instruction.FromString(line));
+                continue;
             }
+
+            var mark = line.TrimEnd(':');
+            output.WriteLine(mark);
+            _marks[mark] = _instructions.Count;
         }
     }
 
@@ -75,12 +75,9 @@ public class VirtualMachine(TextWriter output, IEnumerable<IOptimizer> optimizer
             }
 
             output.WriteLine("Values:");
-            foreach (var frame in _frames)
+            foreach (var kvp in _frames.SelectMany(frame => frame.Variables))
             {
-                foreach (var kvp in frame.Variables)
-                {
-                    output.WriteLine($"Key: {kvp.Key}, Type: {kvp.Value.GetNodeType()}, Value: {kvp.Value.Value}");
-                }
+                output.WriteLine($"Key: {kvp.Key}, Type: {kvp.Value.GetNodeType()}, Value: {kvp.Value.Value}");
             }
 
             output.WriteLine();
@@ -173,45 +170,38 @@ public class VirtualMachine(TextWriter output, IEnumerable<IOptimizer> optimizer
 
     private void HandlePush(Instruction instruction)
     {
-        if (instruction.Arguments.Count != 1)
-            throw new InvalidOperationException("Push instruction requires exactly one argument.");
-
-        var value = instruction.Arguments[0];
-        if (int.TryParse(value, out int intValue))
+        var value = instruction.Arguments.Single();
+        if (int.TryParse(value, out var intValue))
         {
             _frames.Peek().Objects.Add(new IntegerNode(intValue));
             _valueStack.Push(_frames.Peek().Objects.Last());
+            return;
         }
-        else
-        {
-            if (!_frames.Peek().Variables.TryGetValue(value, out var result))
-            {
-                throw new InvalidOperationException("Invalid push argument: not an integer.");
-            }
 
-            _valueStack.Push(result);
+        if (!_frames.Peek().Variables.TryGetValue(value, out var result))
+        {
+            throw new InvalidOperationException("Invalid push argument: not an integer.");
         }
+
+        _valueStack.Push(result);
     }
 
     private void HandlePop(Instruction instruction)
     {
-        if (_valueStack.Count == 0)
-            throw new InvalidOperationException("Value stack is empty.");
+        if (_valueStack.Count == 0) throw new InvalidOperationException("Value stack is empty.");
 
         if (instruction.Arguments.Count == 1)
         {
-            var arg = instruction.Arguments[0];
-            _frames.Peek().Variables[arg] = _valueStack.Pop();
+            _frames.Peek().Variables[instruction.Arguments.Single()] = _valueStack.Pop();
+            return;
         }
-        else
-        {
-            var arg = instruction.Arguments[1];
-            var index = _valueStack.Pop() as IntegerNode;
-            var value = _valueStack.Pop() as IntegerNode;
-            var array = _frames.Peek().Variables[arg] as ArrayNode;
-            output.WriteLine($"{index?.Value} and {value?.Value}");
-            array[int.Parse(index.Value, CultureInfo.InvariantCulture)] = value;
-        }
+
+        var arg = instruction.Arguments[1];
+        var index = (IntegerNode)_valueStack.Pop();
+        var value = (IntegerNode)_valueStack.Pop();
+        var array = (ArrayNode)_frames.Peek().Variables[arg];
+        output.WriteLine($"{index.Value} and {value.Value}");
+        array[int.Parse(index.Value, CultureInfo.InvariantCulture)] = value;
     }
 
     private void HandlePrint()
@@ -247,8 +237,7 @@ public class VirtualMachine(TextWriter output, IEnumerable<IOptimizer> optimizer
         if (_valueStack.Count == 0)
             throw new InvalidOperationException("Value stack is empty.");
 
-        var condition = _valueStack.Pop();
-        if (condition.Value == "0")
+        if (_valueStack.Pop().Value == "0")
         {
             HandleJump(instruction);
         }
@@ -256,10 +245,7 @@ public class VirtualMachine(TextWriter output, IEnumerable<IOptimizer> optimizer
 
     private void HandleJump(Instruction instruction)
     {
-        if (instruction.Arguments.Count != 1)
-            throw new InvalidOperationException("Jump instruction requires exactly one argument.");
-
-        if (!_marks.TryGetValue(instruction.Arguments[0], out var target))
+        if (!_marks.TryGetValue(instruction.Arguments.Single(), out var target))
             throw new InvalidOperationException("Invalid jump target.");
 
         // _frames.Peek().ReturnAddress = target - 1;
@@ -278,10 +264,7 @@ public class VirtualMachine(TextWriter output, IEnumerable<IOptimizer> optimizer
 
     private void HandleCall(Instruction instruction)
     {
-        if (instruction.Arguments.Count != 1)
-            throw new InvalidOperationException("Call instruction requires one argument.");
-
-        if (!_marks.TryGetValue(instruction.Arguments[0], out var target))
+        if (!_marks.TryGetValue(instruction.Arguments.Single(), out var target))
             throw new InvalidOperationException("Invalid function target.");
 
         _frames.Push(new Frame { ReturnAddress = _instructionPointer + 1 });
@@ -297,13 +280,14 @@ public class VirtualMachine(TextWriter output, IEnumerable<IOptimizer> optimizer
             return;
         }
 
-        int returnValue = int.Parse(instruction.Arguments[0], CultureInfo.InvariantCulture);
+        var returnValue = int.Parse(instruction.Arguments[0], CultureInfo.InvariantCulture);
         var prevFrame = _frames.ToArray()[_frames.Count - 2];
         var frame = _frames.Peek();
 
-        for (int i = 0; i < returnValue; ++i)
+        var asArray = _valueStack.ToArray();
+        for (var i = 0; i < returnValue; ++i)
         {
-            prevFrame.Objects.Add(_valueStack.ToArray()[_valueStack.Count - 1 - i]);
+            prevFrame.Objects.Add(asArray[_valueStack.Count - 1 - i]);
         }
 
         _instructionPointer = _frames.Pop().ReturnAddress - 1;

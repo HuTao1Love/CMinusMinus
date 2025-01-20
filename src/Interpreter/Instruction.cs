@@ -1,19 +1,11 @@
 ﻿namespace Interpreter;
 
-public class Instruction
+public record Instruction(VmInstructionType Type, IReadOnlyList<string> Arguments)
 {
-    public VmInstructionType Type { get; set; }
-
-    public IList<string> Arguments { get; set; } = [];
-
     public static Instruction FromString(string instruction)
     {
         var parts = instruction.Split([' ', '\t'], StringSplitOptions.RemoveEmptyEntries);
 
-        return new Instruction
-        {
-            Type = Enum.Parse<VmInstructionType>(parts[0], true),
-            Arguments = parts.Skip(1).ToList()
-        };
+        return new Instruction(Enum.Parse<VmInstructionType>(parts[0], true), parts.Skip(1).ToList());
     }
 }
