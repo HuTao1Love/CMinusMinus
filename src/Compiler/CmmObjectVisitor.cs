@@ -1,286 +1,208 @@
-﻿using Compiler.Ast;
+﻿namespace Compiler;
 
-namespace Compiler;
-
-public class CmmObjectVisitor : ICmmObjectVisitor<bool>
+public class CmmObjectVisitor(StreamWriter sw) : ICmmObjectVisitor<bool>
 {
-    private readonly StreamWriter _sw;
     private int _labelCounter;
-
-    public CmmObjectVisitor(StreamWriter sw)
-    {
-        _sw = sw;
-        _labelCounter = 0;
-    }
 
     private int NextLabel() => _labelCounter++;
 
-    public bool VisitValue(Value context) => context switch
-    {
-        IntValue intValue => VisitIntValue(intValue),
-        _ => throw new NotSupportedException("Unsupported value type.")
-    };
+    public bool VisitCmmObject(CmmObject cmmObject) => cmmObject.Accept(this);
 
-    public bool VisitIntValue(IntValue context)
+    public bool VisitValue(Value cmmObject) => cmmObject.Accept(this);
+
+    public bool VisitIntValue(IntValue cmmObject)
     {
-        _sw.WriteLine($"\tpush\t{context.Value}");
+        sw.WriteLine($"\tpush\t{cmmObject.Value}");
         return true;
     }
 
-    public bool VisitStatement(Statement context) => context switch
-    {
-        PrintStatement print => VisitPrintStatement(print),
-        ReturnStatement ret => VisitReturnStatement(ret),
-        AssignmentStatement assign => VisitAssignmentStatement(assign),
-        ArrayInitializationStatement arrayInit => VisitArrayInitializationStatement(arrayInit),
-        FunctionStatement funcStmt => VisitFunctionStatement(funcStmt),
-        WhileStatement whileStmt => VisitWhileStatement(whileStmt),
-        ForStatement forStmt => VisitForStatement(forStmt),
-        IfStatement ifStmt => VisitIfStatement(ifStmt),
-        BlockStatement blockStmt => VisitBlockStatement(blockStmt),
-        _ => throw new NotSupportedException("Unsupported statement type.")
-    };
+    public bool VisitStatement(Statement cmmObject) => cmmObject.Accept(this);
 
-    public bool VisitBlock(Block context)
+    public bool VisitBlock(Block cmmObject) => cmmObject.Statements.All(s => s.Accept(this));
+
+    public bool VisitVariable(Variable cmmObject)
     {
-        foreach (var statement in context.Statements)
+        if (cmmObject.ArrayAccess is null || cmmObject.ArrayAccess.Length == 0)
         {
-            VisitStatement(statement);
+            sw.Write($"\tpush\t{cmmObject.Name}");
+            return true;
         }
 
-        return true;
+        var result = cmmObject.ArrayAccess.All(a => a.Accept(this));
+
+        sw.Write($"\taccess\t{cmmObject.Name}");
+
+        return result;
     }
 
-    public bool VisitVariable(Variable context)
+    public bool VisitFunctionCall(FunctionCall cmmObject)
     {
-        if (context.ArrayAccess is not null && context.ArrayAccess.Length != 0)
+        if (BuiltinCmmFunctionDirector.TryGetBuiltin(cmmObject.Function, out var builtin))
         {
-            foreach (var expr in context.ArrayAccess)
-            {
-                VisitExpression(expr);
-            }
-
-            _sw.Write($"\taccess\t{context.Name}");
-        }
-        else
-        {
-            _sw.Write($"\tpush\t{context.Name}");
+            return builtin.Visit(sw, cmmObject);
         }
 
-        return true;
-    }
-
-    public bool VisitFunctionCall(FunctionCall context)
-    {
-        // todo: hardcoded builtin function
-        if (context.Function == "len")
-        {
-            return VisitLength(context);
-        }
-
-        foreach (var arg in context.Args.Reverse())
+        foreach (var arg in cmmObject.Args.Reverse())
         {
             VisitExpression(arg);
         }
 
-        _sw.WriteLine($"\tcall\t{context.Function}");
+        sw.WriteLine($"\tcall\t{cmmObject.Function}");
         return true;
     }
 
-    public bool VisitExpression(Expression context) => context switch
-    {
-        VariableExpression varExpr => VisitVariableExpression(varExpr),
-        FunctionExpression funcExpr => VisitFunctionExpression(funcExpr),
-        ValueExpression valExpr => VisitValueExpression(valExpr),
-        NegationExpression negExpr => VisitNegationExpression(negExpr),
-        CalculationExpression calcExpr => VisitCalculationExpression(calcExpr),
-        LogicalExpression logExpr => VisitLogicalExpression(logExpr),
-        _ => throw new NotSupportedException("Unsupported expression type.")
-    };
+    public bool VisitExpression(Expression cmmObject) => cmmObject.Accept(this);
 
-    public bool VisitVariableExpression(VariableExpression context)
+    public bool VisitVariableExpression(VariableExpression cmmObject)
     {
-        VisitVariable(context.Variable);
-        _sw.WriteLine();
-        return true;
+        var result = VisitVariable(cmmObject.Variable);
+        sw.WriteLine();
+        return result;
     }
 
-    public bool VisitFunctionExpression(FunctionExpression context) => VisitFunctionCall(context.Function);
+    public bool VisitFunctionExpression(FunctionExpression cmmObject) => VisitFunctionCall(cmmObject.Function);
 
-    public bool VisitValueExpression(ValueExpression context) => VisitValue(context.Value);
+    public bool VisitValueExpression(ValueExpression cmmObject) => VisitValue(cmmObject.Value);
 
-    public bool VisitNegationExpression(NegationExpression context)
+    public bool VisitNegationExpression(NegationExpression cmmObject)
     {
-        VisitExpression(context.Expression);
-        _sw.WriteLine("\tneg");
-        return true;
+        var result = VisitExpression(cmmObject.Expression);
+        sw.WriteLine("\tneg");
+        return result;
     }
 
-    public bool VisitCalculationExpression(CalculationExpression context)
+    public bool VisitCalculationExpression(CalculationExpression cmmObject)
     {
-        VisitExpression(context.Lhs);
-        VisitExpression(context.Rhs);
-        _sw.WriteLine($"\t{GetOperator(context.Operator)}");
-        return true;
+        var result = VisitExpression(cmmObject.Lhs) && VisitExpression(cmmObject.Rhs);
+        sw.WriteLine($"\t{GetOperator(cmmObject.Operator)}");
+        return result;
     }
 
-    public bool VisitLogicalExpression(LogicalExpression context)
+    public bool VisitLogicalExpression(LogicalExpression cmmObject)
     {
-        VisitExpression(context.Lhs);
-        VisitExpression(context.Rhs);
-        _sw.WriteLine($"\t{GetOperator(context.Operator)}");
-        return true;
+        var result = VisitExpression(cmmObject.Lhs) && VisitExpression(cmmObject.Rhs);
+        sw.WriteLine($"\t{GetOperator(cmmObject.Operator)}");
+        return result;
     }
 
-    public bool VisitPrintStatement(PrintStatement context)
+    public bool VisitPrintStatement(PrintStatement cmmObject)
     {
-        VisitExpression(context.Expression);
-        _sw.WriteLine("\tprint");
-        return true;
+        var result = VisitExpression(cmmObject.Expression);
+        sw.WriteLine("\tprint");
+        return result;
     }
 
     // todo: hardcoded to always return 1 argument
-    public bool VisitReturnStatement(ReturnStatement context)
+    public bool VisitReturnStatement(ReturnStatement cmmObject)
     {
-        VisitExpression(context.Expression);
-        _sw.WriteLine($"\treturn\t1");
-        return true;
+        var result = VisitExpression(cmmObject.Expression);
+        sw.WriteLine($"\treturn\t1");
+        return result;
     }
 
-    public bool VisitAssignmentStatement(AssignmentStatement context)
+    public bool VisitAssignmentStatement(AssignmentStatement cmmObject)
     {
-        VisitExpression(context.Value);
+        var result = VisitExpression(cmmObject.Value);
 
-        if (context.Variable.ArrayAccess != null && context.Variable.ArrayAccess.Length > 0)
+        if (cmmObject.Variable.ArrayAccess is not { Length: > 0 })
         {
-            foreach (var index in context.Variable.ArrayAccess)
-            {
-                VisitExpression(index);
-            }
-
-            _sw.WriteLine($"\tpop\tarr\t{context.Variable.Name}");
-        }
-        else
-        {
-            _sw.WriteLine($"\tpop\t{context.Variable.Name}");
+            sw.WriteLine($"\tpop\t{cmmObject.Variable.Name}");
+            return result;
         }
 
-        return true;
+        result &= cmmObject.Variable.ArrayAccess.All(index => index.Accept(this));
+
+        sw.WriteLine($"\tpop\tarr\t{cmmObject.Variable.Name}");
+
+        return result;
     }
 
-    public bool VisitArrayInitializationStatement(ArrayInitializationStatement context)
+    public bool VisitArrayInitializationStatement(ArrayInitializationStatement cmmObject)
     {
-        VisitExpression(context.Size);
-        _sw.WriteLine($"\tarray\t{context.Name}");
-        return true;
+        var result = VisitExpression(cmmObject.Size);
+        sw.WriteLine($"\tarray\t{cmmObject.Name}");
+        return result;
     }
 
-    public bool VisitFunctionStatement(FunctionStatement context) => VisitFunctionCall(context.Function);
+    public bool VisitFunctionStatement(FunctionStatement cmmObject) => VisitFunctionCall(cmmObject.Function);
 
-    public bool VisitWhileStatement(WhileStatement context)
+    public bool VisitWhileStatement(WhileStatement cmmObject)
     {
         var startLabel = NextLabel();
         var endLabel = NextLabel();
 
-        _sw.WriteLine($"L{startLabel}:");
-        VisitExpression(context.Condition);
-        _sw.WriteLine($"\tjz\tL{endLabel}");
-        VisitBlock(context.Body);
-        _sw.WriteLine($"\tjmp\tL{startLabel}");
-        _sw.WriteLine($"L{endLabel}:");
-        return true;
+        sw.WriteLine($"L{startLabel}:");
+        var result = VisitExpression(cmmObject.Condition);
+        sw.WriteLine($"\tjz\tL{endLabel}");
+        result &= VisitBlock(cmmObject.Body);
+        sw.WriteLine($"\tjmp\tL{startLabel}");
+        sw.WriteLine($"L{endLabel}:");
+        return result;
     }
 
-    public bool VisitForStatement(ForStatement context)
+    public bool VisitForStatement(ForStatement cmmObject)
     {
         var startLabel = NextLabel();
         var endLabel = NextLabel();
 
-        VisitAssignmentStatement(context.Start);
-        _sw.WriteLine($"L{startLabel}:");
-        VisitExpression(context.Condition);
-        _sw.WriteLine($"\tjz\tL{endLabel}");
-        VisitBlock(context.Body);
-        VisitAssignmentStatement(context.Step);
-        _sw.WriteLine($"\tjmp\tL{startLabel}");
-        _sw.WriteLine($"L{endLabel}:");
-        return true;
+        var result = VisitAssignmentStatement(cmmObject.Start);
+        sw.WriteLine($"L{startLabel}:");
+        result &= VisitExpression(cmmObject.Condition);
+        sw.WriteLine($"\tjz\tL{endLabel}");
+        result &= VisitBlock(cmmObject.Body) && VisitAssignmentStatement(cmmObject.Step);
+        sw.WriteLine($"\tjmp\tL{startLabel}");
+        sw.WriteLine($"L{endLabel}:");
+        return result;
     }
 
-    public bool VisitIfStatement(IfStatement context)
+    public bool VisitIfStatement(IfStatement cmmObject)
     {
-        VisitExpression(context.Condition);
+        var result = VisitExpression(cmmObject.Condition);
 
-        if (context.ElseBody != null)
+        if (cmmObject.ElseBody == null)
         {
             var label1 = NextLabel();
 
-            _sw.WriteLine($"\tjz\tL{label1}");
-            VisitBlock(context.Body);
+            sw.WriteLine($"\tjz\tL{label1}");
+            result &= VisitBlock(cmmObject.Body);
+            sw.WriteLine($"L{label1}:");
+
+            return result;
+        }
+        else
+        {
+            var label1 = NextLabel();
+
+            sw.WriteLine($"\tjz\tL{label1}");
+            result &= VisitBlock(cmmObject.Body);
 
             var label2 = NextLabel();
 
-            _sw.WriteLine($"\tjmp\tL{label2}");
-            _sw.WriteLine($"L{label1}:");
-            VisitBlock(context.ElseBody);
-            _sw.WriteLine($"L{label2}:");
-        }
-        else
-        {
-            var label1 = NextLabel();
-
-            _sw.WriteLine($"\tjz\tL{label1}");
-            VisitBlock(context.Body);
-            _sw.WriteLine($"L{label1}:");
+            sw.WriteLine($"\tjmp\tL{label2}");
+            sw.WriteLine($"L{label1}:");
+            result &= VisitBlock(cmmObject.ElseBody);
+            sw.WriteLine($"L{label2}:");
         }
 
-        return true;
+        return result;
     }
 
-    public bool VisitBlockStatement(BlockStatement context)
+    public bool VisitBlockStatement(BlockStatement cmmObject) => VisitBlock(cmmObject.Block);
+
+    public bool VisitFunctionDeclaration(FunctionDeclaration cmmObject)
     {
-        return VisitBlock(context.Block);
-    }
-
-    public bool VisitFunctionDeclaration(FunctionDeclaration context)
-    {
-        _sw.WriteLine($"{context.Name}:");
-        foreach (var arg in context.Args)
+        sw.WriteLine($"{cmmObject.Name}:");
+        foreach (var arg in cmmObject.Args)
         {
-            _sw.WriteLine($"\tpop\t{arg}");
+            sw.WriteLine($"\tpop\t{arg}");
         }
 
-        VisitBlock(context.Body);
-        _sw.WriteLine("\treturn\t0");
-        return true;
+        var result = VisitBlock(cmmObject.Body);
+        sw.WriteLine("\treturn\t0");
+        return result;
     }
 
-    public bool VisitProgram(Program context)
-    {
-        return context.Functions.All(func => VisitFunctionDeclaration(func));
-    }
-
-    // todo: hardcoded builtin function
-    public bool VisitLength(FunctionCall context)
-    {
-        if (context.Args.Length != 1)
-        {
-            throw new NotSupportedException($"len only supports a single argument.");
-        }
-
-        var arg = context.Args[0];
-
-        if (arg is VariableExpression variableExpr)
-        {
-            _sw.WriteLine($"\tlength\t{variableExpr.Variable.Name}");
-        }
-        else
-        {
-            throw new NotSupportedException($"Unsupported expression type in len.");
-        }
-
-        return true;
-    }
+    public bool VisitProgram(Program cmmObject) => cmmObject.Functions.All(VisitFunctionDeclaration);
 
     private static string GetOperator(string op) => op switch
     {

@@ -1,3 +1,4 @@
+root = true
 [*]
 charset = utf-8
 indent_style = space
@@ -73,4 +74,5 @@ dotnet_diagnostic.SA1600.severity = none
 dotnet_diagnostic.SA0001.severity = none
 dotnet_diagnostic.CA1724.severity = none
 dotnet_diagnostic.SA1010.severity = none
+dotnet_diagnostic.CA1810.severity = none
 dotnet_diagnostic.CA1303.severity = none
