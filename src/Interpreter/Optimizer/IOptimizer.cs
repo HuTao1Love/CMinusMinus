@@ -2,5 +2,5 @@
 
 public interface IOptimizer
 {
-    public void Optimize(IList<Instruction> instructions, Dictionary<string, int> marks);
+    public void Optimize(IList<Instruction> instructions, Dictionary<string, int> labels);
 }
