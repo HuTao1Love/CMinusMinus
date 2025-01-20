@@ -1,4 +1,4 @@
-﻿func main() {
+﻿main() {
     new nonPrime[1000];
     nonPrime[0] = 1;
     nonPrime[0] = 1;

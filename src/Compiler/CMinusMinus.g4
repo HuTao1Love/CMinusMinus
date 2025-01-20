@@ -26,7 +26,7 @@ COMMENT      : '//' ~[\r\n]* -> skip;
 program: function_declaration+ EOF;
 
 function_declaration
-    : 'func' ID '(' (ID (',' ID)*)? ')' block
+    : ID '(' (ID (',' ID)*)? ')' block
     ;
 
 statement

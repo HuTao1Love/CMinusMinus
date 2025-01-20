@@ -103,7 +103,7 @@ public static class Program
             vm.Run(compiled);
             var end = DateTime.Now - start;
             output.WriteLine("===============\n");
-            Console.WriteLine($"Run success. Time: {end.TotalMilliseconds}ms");
+            Console.WriteLine($"Run success. Time: {end.TotalMilliseconds} ms");
 
             return true;
         }

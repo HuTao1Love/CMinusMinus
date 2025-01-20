@@ -1,4 +1,4 @@
-﻿func factorial(x) {
+﻿factorial(x) {
     if (x == 0) {
         return 1;
     }
@@ -6,6 +6,6 @@
     return x * factorial(x - 1);
 }
 
-func main() {
+main() {
     print factorial(20);
 }
