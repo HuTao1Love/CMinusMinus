@@ -1,11 +1,9 @@
 ﻿using Antlr4.Runtime;
-using Compiler.Ast;
 using Compiler.Grammar;
-using Newtonsoft.Json;
 
 namespace Compiler;
 
-public static class Compiler
+public static class CodeCompiler
 {
     private static CmmCompilerVisitor _compilerVisitor = new();
 
@@ -23,6 +21,10 @@ public static class Compiler
         using StreamWriter sw = new(compiled);
 
         CmmObjectVisitor objectVisitor = new(sw);
-        objectVisitor.VisitProgram(program);
+
+        if (!objectVisitor.VisitProgram(program))
+        {
+            throw new ApplicationException("Code compilation failed");
+        }
     }
 }

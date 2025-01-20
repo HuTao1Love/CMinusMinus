@@ -77,7 +77,7 @@ public static class Program
         try
         {
             var start = DateTime.Now;
-            Compiler.Compiler.Compile(file);
+            Compiler.CodeCompiler.Compile(file);
             var end = DateTime.Now - start;
             Console.WriteLine($"Compilation success. Time: {end.TotalMilliseconds}ms");
 
