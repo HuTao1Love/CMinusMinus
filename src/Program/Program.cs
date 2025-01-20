@@ -8,18 +8,15 @@ public static class Program
 {
     private static readonly Argument<string> _file = new("code", "File with code");
 
-    private static readonly Option<string> _optimizations = new(
-        ["-o", "--optimizations"], () => string.Empty, "Optimizations to compile the code")
-    {
-    };
+    private static readonly Option<bool> _optimizations = new(
+        ["-o", "--optimizations"], () => false, "Use JIT optimizations");
 
     private static readonly Option<bool> _writeInfo = new(["-i", "--info", "--information"], "Write information about compile & run time");
 
-    private static readonly IReadOnlyDictionary<char, IOptimizer> _optimizers =
-        new Dictionary<char, IOptimizer>()
-        {
-            { 'c', new ConstFoldingOptimizer() },
-        };
+    private static readonly IReadOnlyCollection<IOptimizer> _optimizers =
+    [
+        new ConstFoldingOptimizer(),
+    ];
 
     public static int Main(string[] args)
     {
@@ -90,25 +87,18 @@ public static class Program
         }
     }
 
-    private static bool Run(string file, string optimizations, bool writeInfo = true)
+    private static bool Run(string file, bool optimizations, bool writeInfo = true)
     {
         var output = writeInfo ? Console.Out : TextWriter.Null;
         var compiled = file.EndsWith(".cmmbin", StringComparison.InvariantCulture) ? file : $"{file}.cmmbin";
         output.WriteLine("Execute run");
 
-        var invalidOptimizations = optimizations.Where(o => !_optimizers.ContainsKey(o)).Aggregate(string.Empty, (s, c) => s + c);
-        if (invalidOptimizations.Length != 0)
-        {
-            Console.WriteLine($"Invalid optimizations: {invalidOptimizations}. They were ignored.");
-        }
-
-        var optimizers = optimizations.Where(o => _optimizers.ContainsKey(o)).Select(o => _optimizers[o]);
         output.WriteLine("Running...\n===============");
 
         try
         {
             var start = DateTime.Now;
-            var vm = new VirtualMachine(output, optimizers);
+            var vm = new VirtualMachine(output, optimizations ? _optimizers : []);
             vm.Run(compiled);
             var end = DateTime.Now - start;
             output.WriteLine("===============\n");
