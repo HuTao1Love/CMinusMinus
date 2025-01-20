@@ -1,5 +1,5 @@
 ﻿func main() {
-    new nonPrime[100001];
+    new nonPrime[1000];
     nonPrime[0] = 1;
     nonPrime[0] = 1;
     i = 2;
