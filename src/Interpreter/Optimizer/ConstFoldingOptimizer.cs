@@ -14,7 +14,7 @@ public class ConstFoldingOptimizer : IOptimizer
     {
         var optimized = new List<Tuple<Instruction, int>>();
         var deleted = new List<int>();
-        // todo: replace with a stack
+
         var stack = new List<ConstantFoldingStackValue>();
 
         for (var i = 0; i < instructions.Count; ++i)
@@ -29,7 +29,6 @@ public class ConstFoldingOptimizer : IOptimizer
                         throw new InvalidOperationException("push should have exactly one argument");
                     }
 
-                    // todo: duplicated parsing code for ints
                     var arg = instruction.Arguments[0];
                     stack.Add(BigInteger.TryParse(arg, out var parsed)
                         ? new ConstantFoldingStackValue(new IntegerNode(parsed), true)
@@ -55,7 +54,6 @@ public class ConstFoldingOptimizer : IOptimizer
 
                     if (lhs.IsConstant && rhs.IsConstant)
                     {
-                        // todo: duplicated code
                         var result = instruction.Type switch
                         {
                             VmInstructionType.Add => lhs.Value.Add(rhs.Value),
@@ -97,7 +95,6 @@ public class ConstFoldingOptimizer : IOptimizer
 
                     if (lhs.IsConstant && rhs.IsConstant)
                     {
-                        // todo: duplicated code
                         var result = instruction.Type switch
                         {
                             VmInstructionType.CompEQ => lhs.Value.Equal(rhs.Value),
