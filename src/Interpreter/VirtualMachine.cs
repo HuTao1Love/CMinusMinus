@@ -31,12 +31,6 @@ public class VirtualMachine
 
         _output.WriteLine("Read instructions");
 
-        // todo optimize in runtime
-        foreach (var optimizer in _optimizers)
-        {
-            optimizer.Optimize(_instructions, _marks);
-        }
-
         foreach (var instruction in _instructions)
         {
             _output.WriteLine(instruction.Type);
@@ -74,6 +68,12 @@ public class VirtualMachine
 
         _output.WriteLine();
         _output.WriteLine("VM Execution");
+
+        foreach (var optimizer in _optimizers)
+        {
+            optimizer.Optimize(_instructions, _marks);
+        }
+
         while (_instructionPointer < _instructions.Count)
         {
             var instruction = _instructions[_instructionPointer];

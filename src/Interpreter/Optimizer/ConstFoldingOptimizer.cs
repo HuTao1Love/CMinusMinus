@@ -1,4 +1,5 @@
-﻿using Compiler.Nodes;
+﻿using System.Numerics;
+using Compiler.Nodes;
 
 namespace Interpreter.Optimizer;
 
@@ -30,7 +31,7 @@ public class ConstFoldingOptimizer : IOptimizer
 
                     // todo: duplicated parsing code for ints
                     var arg = instruction.Arguments[0];
-                    stack.Add(int.TryParse(arg, out var parsed)
+                    stack.Add(BigInteger.TryParse(arg, out var parsed)
                         ? new ConstantFoldingStackValue(new IntegerNode(parsed), true)
                         : new ConstantFoldingStackValue(new IntegerNode(0), false));
 
