@@ -29,6 +29,7 @@ public static class Program
         var run = new Command("run", "Only run code from selected compiled file")
         {
             _file,
+            _optimizations,
             _writeInfo,
         };
 
