@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Numerics;
 using Compiler.Nodes;
 using Interpreter.Optimizer;
 
@@ -193,7 +194,7 @@ public class VirtualMachine
     private void HandlePush(Instruction instruction)
     {
         var value = instruction.Arguments.Single();
-        if (int.TryParse(value, out var intValue))
+        if (BigInteger.TryParse(value, out var intValue))
         {
             _frames.Peek().Objects.Add(new IntegerNode(intValue));
             _valueStack.Push(_frames.Peek().Objects.Last());
@@ -302,7 +303,7 @@ public class VirtualMachine
             return;
         }
 
-        var returnValue = int.Parse(instruction.Arguments[0], CultureInfo.InvariantCulture);
+        var returnValue = BigInteger.Parse(instruction.Arguments[0], CultureInfo.InvariantCulture);
         var prevFrame = _frames.ToArray()[_frames.Count - 2];
         var frame = _frames.Peek();
 
