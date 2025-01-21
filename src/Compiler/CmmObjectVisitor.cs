@@ -198,7 +198,12 @@ public class CmmObjectVisitor(StreamWriter sw) : ICmmObjectVisitor<bool>
         }
 
         var result = VisitBlock(cmmObject.Body);
-        sw.WriteLine("\treturn\t0");
+
+        if (!cmmObject.Body.Statements.Any(s => s is ReturnStatement))
+        {
+            sw.WriteLine("\treturn\t0");
+        }
+
         return result;
     }
 

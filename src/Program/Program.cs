@@ -16,6 +16,7 @@ public static class Program
     private static readonly IReadOnlyCollection<IOptimizer> _optimizers =
     [
         new ConstFoldingOptimizer(),
+        new DeadCodeOptimizer(),
     ];
 
     public static int Main(string[] args)
