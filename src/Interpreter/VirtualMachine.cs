@@ -59,11 +59,6 @@ public class VirtualMachine
 
     private void Execute()
     {
-        if (!_marks.TryGetValue("main", out _instructionPointer))
-        {
-            throw new InvalidOperationException("main function not found");
-        }
-
         _frames.Push(new Frame());
 
         _output.WriteLine();
@@ -72,6 +67,11 @@ public class VirtualMachine
         foreach (var optimizer in _optimizers)
         {
             optimizer.Optimize(_instructions, _marks);
+        }
+
+        if (!_marks.TryGetValue("main", out _instructionPointer))
+        {
+            throw new InvalidOperationException("main function not found");
         }
 
         while (_instructionPointer < _instructions.Count)
@@ -338,13 +338,15 @@ public class VirtualMachine
         if (!int.TryParse(indexNode.Value, out var index))
             throw new InvalidOperationException("Invalid array index.");
 
-        if (_frames.Peek().Variables[instruction.Arguments[0]] is not ArrayNode arrayNode) throw new InvalidOperationException();
+        if (_frames.Peek().Variables[instruction.Arguments[0]] is not ArrayNode arrayNode)
+            throw new InvalidOperationException();
         _valueStack.Push(arrayNode[index]);
     }
 
     private void HandleArrayLength(Instruction instruction)
     {
-        if (_frames.Peek().Variables[instruction.Arguments[0]] is not ArrayNode arrayNode) throw new InvalidOperationException();
+        if (_frames.Peek().Variables[instruction.Arguments[0]] is not ArrayNode arrayNode)
+            throw new InvalidOperationException();
         _valueStack.Push(new IntegerNode(arrayNode.Count));
     }
 
